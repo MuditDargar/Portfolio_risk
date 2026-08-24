@@ -5,7 +5,10 @@ A formula-driven full-stack finance engine: portfolio construction, risk metrics
 rebalancing drift detection, and Markowitz mean-variance optimization
 (efficient frontier). Every number is produced by a closed-form formula or a
 deterministic numerical method (Newton-Raphson, SLSQP quadratic programming)
-— no ML or AI in the computation path. Full spec: `Portfolio_Risk_Dashboard_SDD.docx`.
+— no ML or AI in the computation path.
+
+**Live:** [frontend](https://portfolio-risk-dashboard-orcin.vercel.app) · [backend API docs](https://portfolio-risk-backend-z6nr.onrender.com/docs)
+> Backend is on Render's free tier, which spins down after inactivity — the first request after a while may take up to ~60s to wake it up.
 
 ## Stack
 
