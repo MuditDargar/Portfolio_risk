@@ -1,0 +1,27 @@
+# Render free-tier web service config for the backend.
+# Database: Render's free Postgres now expires after 30 days, so DATABASE_URL
+# is left for you to fill in with a Neon (neon.tech) or Supabase free-tier
+# Postgres connection string instead (both have no-expiry free tiers).
+# Redis is optional — leave REDIS_URL blank to use the in-process cache fallback.
+services:
+  - type: web
+    name: portfolio-risk-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: RISK_FREE_RATE
+        value: "0.065"
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHON_VERSION
+        value: "3.12.7"
