@@ -54,6 +54,21 @@ def test_covariance_matrix_symmetric_and_matches_numpy():
     assert np.allclose(cov, cov.T)
 
 
+def test_covariance_matrix_single_asset_is_1x1_not_scalar():
+    # np.cov collapses a single-column input to a 0-d scalar; a single-asset
+    # portfolio (a legitimate FR-1 case) must still get a proper 2D matrix
+    # so downstream w^T . Sigma . w matrix algebra doesn't break.
+    rng = np.random.default_rng(11)
+    returns_matrix = rng.normal(0, 0.01, size=(30, 1))
+    cov = risk.covariance_matrix(returns_matrix)
+    assert cov.shape == (1, 1)
+    assert cov.ndim == 2
+
+    weights = np.array([1.0])
+    variance = risk.portfolio_variance(weights, cov)
+    assert variance == pytest.approx(float(cov[0, 0]), abs=1e-12)
+
+
 def test_correlation_diagonal_is_one():
     rng = np.random.default_rng(1)
     returns_matrix = rng.normal(0, 0.01, size=(50, 2))

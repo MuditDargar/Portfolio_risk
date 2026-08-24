@@ -150,6 +150,40 @@ def test_get_prices_unknown_asset_404(client):
     assert resp.status_code == 404
 
 
+def test_single_holding_portfolio_metrics(client):
+    # Regression test: a portfolio with exactly one holding previously 500'd
+    # in /metrics and /risk because np.cov collapses a single-asset return
+    # series to a 0-d scalar instead of a 1x1 matrix (fixed in
+    # app/formulas/risk.py::covariance_matrix).
+    n = 30
+    dates = _dates(n)
+    for symbol, asset_class in [("SOLO", "equity"), ("NIFTY50", "index")]:
+        client.post("/api/v1/assets", json={"symbol": symbol, "name": symbol, "asset_class": asset_class})
+        prices = _price_series(100.0, 0.001, n)
+        payload = {"prices": [{"date": d, "close_price": p} for d, p in zip(dates, prices)]}
+        resp = client.post(f"/api/v1/assets/{symbol}/prices", json=payload)
+        assert resp.status_code == 201, resp.text
+
+    resp = client.post(
+        "/api/v1/portfolios",
+        json={
+            "name": "Solo Portfolio",
+            "holdings": [
+                {"asset_symbol": "SOLO", "quantity": 5, "target_weight": 1.0, "buy_price": 100, "buy_date": "2025-01-01"}
+            ],
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    portfolio_id = resp.json()["id"]
+
+    resp = client.get(f"/api/v1/portfolios/{portfolio_id}/metrics")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["volatility"] >= 0
+
+    resp = client.get(f"/api/v1/portfolios/{portfolio_id}/risk")
+    assert resp.status_code == 200, resp.text
+
+
 def test_create_portfolio_rejects_weights_not_summing_to_one(client):
     client.post("/api/v1/assets", json={"symbol": "XXX", "name": "X", "asset_class": "equity"})
     resp = client.post(

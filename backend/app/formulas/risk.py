@@ -17,7 +17,11 @@ def covariance_matrix(returns_matrix: np.ndarray) -> np.ndarray:
     if returns_matrix.shape[0] < 2:
         raise ValueError("need at least 2 return observations to compute covariance")
     # rowvar=False: each column is a variable (asset), each row an observation (period)
-    return np.cov(returns_matrix, rowvar=False, ddof=1)
+    cov = np.cov(returns_matrix, rowvar=False, ddof=1)
+    # np.cov collapses to a 0-d scalar for a single-asset (1-column) input
+    # instead of a 1x1 matrix; normalize so callers can always rely on a
+    # proper (n_assets, n_assets) 2D array, including n_assets == 1.
+    return np.atleast_2d(cov)
 
 
 def correlation_matrix(returns_matrix: np.ndarray) -> np.ndarray:
